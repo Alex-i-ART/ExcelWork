@@ -28,17 +28,12 @@ def find_excel_file():
         raise FileNotFoundError("Не найден файл с расширением .xlsx")
     return files[0]
 
-def read_month_from_txt():
-    try:
-        with open('month.txt', 'r', encoding='utf-8') as file:
-            month = file.read().strip()
-            month = month[1:]
-            return month
-    except FileNotFoundError:
-        print("Файл month.txt не найден. Используется значение по умолчанию 'Июль'")
-        return "Июль"
+def get_user_input():
+    month = input("Введите месяц (например, 'Июль'): ").strip()
+    day = input("Введите число (например, '15'): ").strip()
+    return month, day
 
-def read_excel_data(file_path, month):
+def read_excel_data(file_path, month,day):
     bar_df = pd.read_excel(
         file_path, 
         header=None,
@@ -56,10 +51,12 @@ def read_excel_data(file_path, month):
         file_path,
         header=None,
         usecols="J:AN",
-        skiprows=39,
+        skiprows=50,
         nrows=1
     )
-    line_data["Факт"] = line_df.iloc[0,:].cumsum().tolist()
+    line_data["Факт"] = [int(round(x)) if isinstance(x, (int, float)) else x for x in line_df.iloc[0, 1:]]
+    line_data["Факт"].insert(0,0)
+    print(line_data["Факт"])
 
     line_df = pd.read_excel(
         file_path,
@@ -89,27 +86,24 @@ def read_excel_data(file_path, month):
      
     return (bar_categories, bar_values), (x_values, line_data)
 
-def update_bar_chart(ax, month, start_idx, visible_categories=15):
+def update_bar_chart(ax, month, day, start_idx, visible_categories=15):
     ax.clear()
     
     ax.set_position([0.30, 0.3, 0.55, 0.6])
     end_idx = min(start_idx + visible_categories, len(bar_categories))
     current_categories = bar_categories[start_idx:end_idx]
     current_values = bar_values[start_idx:end_idx]
-    
-    max_value = max(bar_values)
-    min_value = min(bar_values)
-    threshold_high = max_value * 0.7
-    threshold_low = max_value * 0.3
+    procent = round(float(day)/float(max(x_values))*100,2)
     
     colors = []
+    print(current_values)
     for value in current_values:
-        if value >= threshold_high:
-            colors.append('#55A868')
-        elif value >= threshold_low:
-            colors.append('#DD8452')
+        if value*100 > procent:
+            colors.append("#00FF3C")
+        elif value*100 == procent:
+            colors.append("#3700FF")
         else:
-            colors.append('#C44E52')
+            colors.append("#FF0008")
     
     bars = ax.barh(current_categories, current_values, color=colors, edgecolor='gray', alpha=0.8)
     
@@ -121,7 +115,7 @@ def update_bar_chart(ax, month, start_idx, visible_categories=15):
     
     for i, v in enumerate(current_values):
         ax.text(v + 0.01, i, f"{v:.2%}", 
-                va='center', color='black', fontsize=9,
+                va='center', color=colors[i], fontsize=9,fontweight='bold',
                 bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=1))
     
     ax.grid(axis='x', linestyle='--', alpha=0.6)
@@ -130,9 +124,9 @@ def update_line_chart(ax, month):
     ax.clear()
     
 
-    colors = ['#4C72B0', '#DD8452', '#55A868']
+    colors = ["#0062FF", "#FF5E00", "#00FF3C"]
     markers = ['o', 's', 'D']
-    line_styles = ['-', '--', '-.']
+    line_styles = ['-', '-', '-']
     
     for i, (name, values) in enumerate(line_data.items()):
         ax.plot(x_values, values, 
@@ -141,7 +135,7 @@ def update_line_chart(ax, month):
                 marker=markers[i % len(markers)],
                 linestyle=line_styles[i % len(line_styles)],
                 linewidth=2,
-                markersize=6,
+                markersize=0,
                 markeredgecolor='white',
                 markeredgewidth=0.5)
         
@@ -178,7 +172,7 @@ def update_line_chart(ax, month):
                     arrowprops=dict(arrowstyle='->'))
 
 def update_slider(val):
-    update_bar_chart(ax_bar, month, int(val))
+    update_bar_chart(ax_bar, month, day, int(val))
     fig.canvas.draw_idle()
 
 def update_graphs(frame):
@@ -187,7 +181,7 @@ def update_graphs(frame):
         ax_bar.set_visible(True)
         ax_slider.set_visible(True)
         ax_line.set_visible(False)
-        update_bar_chart(ax_bar, month, int(slider.val))
+        update_bar_chart(ax_bar, month, day, int(slider.val))
     else:
         # Показываем линейную диаграмму и скрываем слайдер
         ax_bar.set_visible(False)
@@ -199,12 +193,12 @@ def update_graphs(frame):
 
 if __name__ == "__main__":
     try:
-        month = read_month_from_txt()
+        month, day = get_user_input()
         excel_file = find_excel_file()
         print(f"Анализируем файл: {excel_file}")
         print(f"Используется месяц: {month}")
         
-        (bar_categories, bar_values), (x_values, line_data) = read_excel_data(excel_file, month)
+        (bar_categories, bar_values), (x_values, line_data) = read_excel_data(excel_file, month, day)
         
         print("\nДанные для столбчатой диаграммы:")
         print(f"Категории ({len(bar_categories)}): {bar_categories[:3]}...")
@@ -235,7 +229,7 @@ if __name__ == "__main__":
         
         # Изначально показываем столбчатую диаграмму
         ax_line.set_visible(False)
-        update_bar_chart(ax_bar, month, 0)
+        update_bar_chart(ax_bar, month, day, 0)
         
         ani = FuncAnimation(
             fig, 
