@@ -89,7 +89,7 @@ def read_excel_data(file_path, month, day):
 def update_bar_chart(ax, month, day, start_idx, visible_categories=15):
     ax.clear()
     
-    ax.set_position([0.30, 0.3, 0.55, 0.6])
+    ax.set_position([0.30, 0.2, 0.55, 0.6])
     end_idx = min(start_idx + visible_categories, len(bar_categories))
     current_categories = bar_categories[start_idx:end_idx]
     current_values = bar_values[start_idx:end_idx]
@@ -158,8 +158,8 @@ def update_line_chart(ax, month):
     
     ax.set_xticks(x_values)
     ax.set_xticklabels(x_values, rotation=45, ha='right', fontsize=10, fontweight='bold')
-    ax.set_title(f'ВЫПОЛНЕНИЕ ПЛАНА ПО ОТБОРУ КАНДИДАТОВ НА ВОЕННУЮ СЛУЖБУ ПО КОНТРАКТУ В ВООРУЖЕННЫЕ СИЛЫ РОССИЙСКОЙ ФЕДЕРАЦИИ В ЗАБАЙКАЛЬСКОМ КРАЕ ЗА {month.upper()} 2025', 
-                fontsize=12, pad=20, wrap=True, fontweight='bold', color='red')
+    ax.set_title(f'выполнение плана по отбору кандидатов на военную службу по контракту в вооруженные силы российской федерации в забайкальском крае за {month.upper()} 2025', 
+                fontsize=12, pad=15, wrap=True, fontweight='bold', color='red')
     ax.set_xlabel(month.upper(), fontsize=10, fontweight='bold', color='red')
     ax.set_ylabel('КОЛИЧЕСТВО ГРАЖДАН, ПОДПИСАВШИХ КОНТРАКТ', fontsize=12, wrap=True, fontweight='bold')
     
@@ -194,7 +194,7 @@ def update_graphs(frame):
         ax_line.set_visible(True)
         update_line_chart(ax_line, month)
     
-    plt.subplots_adjust(left=0.3, right=0.85, top=0.9, bottom=0.2)
+    plt.subplots_adjust(left=0.3, right=0.85, top=0.5, bottom=0.4)
 
 if __name__ == "__main__":
     try:
@@ -218,7 +218,7 @@ if __name__ == "__main__":
         # Создаем оси для графиков и слайдера
         ax_bar = fig.add_axes([0.1, 0.2, 0.7, 0.7])  # Основная область для столбчатой диаграммы
         ax_slider = fig.add_axes([0.90, 0.2, 0.03, 0.7])  # Вертикальный слайдер справа
-        ax_line = fig.add_axes([0.1, 0.2, 0.85, 0.7])    # Область для линейного графика
+        ax_line = fig.add_axes([0.1, 0.15, 0.85, 0.7])    # Область для линейного графика
         
         # Настраиваем вертикальный слайдер
         slider = Slider(
